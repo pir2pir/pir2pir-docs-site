@@ -137,6 +137,14 @@ const config: Config = {
           position: 'right',
         },
         ...(hasAlgolia ? [{type: 'search' as const, position: 'right' as const}] : []),
+        // Last, so it sits at the far right whether or not search is configured. Styled as a
+        // button by custom.css: it is the one action on a site that is otherwise all reading.
+        {
+          href: 'https://app.pir2pir.ru',
+          position: 'right',
+          label: 'Войти',
+          className: 'navbar__item--signin',
+        },
       ],
     },
     footer: {

@@ -64,3 +64,32 @@
   opacity: 0.85;
   line-height: 1.6;
 }
+
+/* The only action on a reading site, so it reads as a button rather than another navbar link.
+   Sized from the navbar link's own padding so it lines up with the locale dropdown beside it. */
+.navbar__item--signin {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: linear-gradient(100deg, #e11d48, #ea580c);
+  color: #fff;
+  font-weight: 600;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.navbar__item--signin:hover {
+  color: #fff;
+  text-decoration: none;
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* In the mobile drawer the items are full-width rows; a pill there would look like a stray button. */
+.navbar-sidebar .navbar__item--signin {
+  display: block;
+  margin-left: 0;
+  border-radius: var(--ifm-global-radius);
+  text-align: center;
+}
