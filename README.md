@@ -34,18 +34,25 @@ docker build -t docs . && docker run --rm -p 8099:8080 docs
 
 ## Pipeline
 
+CI is the only place an image is built; Deploy only ever resolves a sha CI already published.
+
 | Trigger | What happens |
 | --- | --- |
-| push to `develop` | CI builds + tests, pushes image `sha-<commit>` and `latest` |
-| push to `production` | CI runs, then Deploy ships `sha-<commit>` over SSH |
-| `docs-update` dispatch from the content repo | rebuilds production's sha with new content, then deploys |
+| push to engine `develop` | CI builds against docs `develop`, pushes `sha-<commit>` + `latest` |
+| push to engine `production` | CI builds against docs `production`, then Deploy ships that sha |
+| push to **content** `develop` | content repo dispatches this CI on `develop` — build only |
+| push to **content** `production` | content repo dispatches this CI on `production` — build, then deploy |
+
+Content follows the engine branch: a build on `develop` clones docs `develop`, a build on
+`production` clones docs `production`. Pull requests build against `production` content, since that
+is what is published.
 
 **Promotion is free.** A fast-forward merge from `develop` to `production` keeps the same commit sha,
-so the deploy resolves `sha-<commit>` to the image CI already built — the artifact that reaches the
+so the deploy resolves `sha-<commit>` to the image CI already built — the artifact reaching the
 server is byte-identical to the one tested on develop.
 
-Content-only changes are the exception: the engine commit has not moved, so there is no new image to
-promote. The `docs-update` dispatch rebuilds production's sha in place before deploying.
+A content-only change has no new engine commit, so the dispatch re-runs CI on the same engine sha and
+republishes that tag with the new content. Deploy then picks it up unchanged.
 
 ## Runtime
 

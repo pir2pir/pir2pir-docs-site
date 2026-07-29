@@ -5,11 +5,15 @@ on:
     branches: [develop, production]
   pull_request:
     branches: [develop, production]
+  # Fired by pir2pir-docs when its content changes, with ref set to the matching branch.
+  workflow_dispatch:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
   DOCS_REPO: pir2pir/pir2pir-docs
-  DOCS_BRANCH: production
+  # Content follows the engine branch: develop builds against develop content, production against
+  # production content. A pull request builds against production, the published content.
+  DOCS_BRANCH: ${{ github.event_name == 'pull_request' && 'production' || github.ref_name }}
 
 jobs:
   build-test:
@@ -63,9 +67,10 @@ jobs:
 
   publish-image:
     name: Build & push image (GHCR)
-    # On branch pushes only: build the image ONCE here (tagged by commit sha) so a later merge to
-    # production deploys this exact image without rebuilding from scratch.
-    if: github.event_name == 'push'
+    # Not for pull requests: build the image ONCE here (tagged by commit sha) so a later merge to
+    # production deploys this exact image without rebuilding from scratch. A content-only change
+    # arrives as workflow_dispatch and must publish too, since the engine commit has not moved.
+    if: github.event_name != 'pull_request'
     needs: build-test
 
     runs-on: ubuntu-latest
