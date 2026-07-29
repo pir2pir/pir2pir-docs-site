@@ -27,6 +27,9 @@ function editUrl({locale, docPath}: {locale: string; docPath: string}): string {
 const config: Config = {
   title: 'Pir2Pir',
   tagline: 'Документация Pir2Pir',
+  // .ico is the legacy fallback; the SVG and the rest of the icon set are declared in headTags
+  // below, and browsers that understand image/svg+xml prefer that one.
+  favicon: 'favicon.ico',
 
   url: 'https://docs.pir2pir.ru',
   baseUrl: '/',
@@ -34,6 +37,17 @@ const config: Config = {
 
   organizationName: 'pir2pir',
   projectName: 'pir2pir-docs-site',
+
+  // Paths here are root-absolute and therefore tied to baseUrl staying '/'. Docusaurus does not
+  // rewrite headTags hrefs the way it does for the favicon field.
+  headTags: [
+    {tagName: 'link', attributes: {rel: 'icon', type: 'image/svg+xml', href: '/img/favicon.svg'}},
+    {tagName: 'link', attributes: {rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png'}},
+    {tagName: 'link', attributes: {rel: 'manifest', href: '/site.webmanifest'}},
+    // Tints the mobile browser chrome to match the navbar in each theme.
+    {tagName: 'meta', attributes: {name: 'theme-color', media: '(prefers-color-scheme: light)', content: '#ffffff'}},
+    {tagName: 'meta', attributes: {name: 'theme-color', media: '(prefers-color-scheme: dark)', content: '#242526'}},
+  ],
 
   // Legal pages must not silently rot into 404s.
   onBrokenLinks: 'throw',
@@ -93,6 +107,17 @@ const config: Config = {
     },
     navbar: {
       title: 'Pir2Pir',
+      // Mark only — the wordmark beside it is the `title` above, set in Space Grotesk by
+      // custom.css. One gradient serves both themes: rose and amber each clear 3:1 against the
+      // light and the dark navbar, so there is no srcDark variant to keep in sync.
+      // alt is empty because "Pir2Pir" is already adjacent as real text; naming the logo too would
+      // make screen readers announce the brand twice.
+      logo: {
+        alt: '',
+        src: 'img/mark-gradient.svg',
+        width: 59,
+        height: 32,
+      },
       items: [
         {
           href: 'https://t.me/pir2pirbot',

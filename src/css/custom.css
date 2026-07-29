@@ -1,24 +1,56 @@
 /* Pir2pir docs theme. Kept deliberately small — Infima defaults carry the rest. */
 
+/* Rose, matching the first stop of the logo gradient (static/img/mark-gradient.svg). Deliberately
+   not violet/green/black: that triad is Школа 21's own identity, and these docs must not read as
+   an official school property. */
 :root {
-  --ifm-color-primary: #2b6cb0;
-  --ifm-color-primary-dark: #275f9c;
-  --ifm-color-primary-darker: #245a94;
-  --ifm-color-primary-darkest: #1e4a7a;
-  --ifm-color-primary-light: #3179c4;
-  --ifm-color-primary-lighter: #3d81c8;
-  --ifm-color-primary-lightest: #5b94d2;
+  --ifm-color-primary: #e11d48; /* 4.70:1 on white — AA for body-size link text */
+  --ifm-color-primary-dark: #cb1a41;
+  --ifm-color-primary-darker: #bf193d;
+  --ifm-color-primary-darkest: #a91636;
+  --ifm-color-primary-light: #e5335a;
+  --ifm-color-primary-lighter: #e63e63;
+  --ifm-color-primary-lightest: #e95475;
   --ifm-code-font-size: 95%;
 }
 
+/* The light-mode rose only reaches 3.66:1 on Infima's dark surface, so dark mode gets its own
+   lighter base rather than reusing the same hue. */
 [data-theme='dark'] {
-  --ifm-color-primary: #7aa9dd;
-  --ifm-color-primary-dark: #5f97d5;
-  --ifm-color-primary-darker: #518ed1;
-  --ifm-color-primary-darkest: #3273bb;
-  --ifm-color-primary-light: #95bbe5;
-  --ifm-color-primary-lighter: #a3c4e9;
-  --ifm-color-primary-lightest: #cddef2;
+  --ifm-color-primary: #f76a85; /* 6.02:1 on #1b1b1d */
+  --ifm-color-primary-dark: #f5486a;
+  --ifm-color-primary-darker: #f4385c;
+  --ifm-color-primary-darkest: #f31640;
+  --ifm-color-primary-light: #f98ca0;
+  --ifm-color-primary-lighter: #fa9cae;
+  --ifm-color-primary-lightest: #fbbeca;
+}
+
+/* Space Grotesk Bold, subset with pyftsubset to the four glyphs of "Pir2Pir" — 808 bytes. Its
+   flat-topped 2 and 45° diagonals echo the cuts in the mark.
+
+   Self-hosted rather than pulled from the Google Fonts CDN on purpose: this site carries the legal
+   pages of an RKN-registered personal data operator, and a third-party font request would disclose
+   every visitor's IP to a foreign processor on each page view. Bundled via a relative url() so the
+   asset pipeline fingerprints it and it survives a baseUrl change.
+
+   SIL Open Font License 1.1 — see ./fonts/OFL.txt. No Reserved Font Name is declared, so the
+   original family name is kept. */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/space-grotesk-700-pir2pir.woff2') format('woff2');
+  /* P, i, r, 2 only. Scoping this keeps a 4-glyph file from ever being consulted for other text. */
+  unicode-range: U+0032, U+0050, U+0069, U+0072;
+}
+
+.navbar__title {
+  font-family: 'Space Grotesk', var(--ifm-font-family-base);
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.015em;
 }
 
 /* Legal pages are long prose; give them a comfortable measure. */
