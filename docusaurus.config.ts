@@ -41,13 +41,15 @@ const config: Config = {
   // Paths here are root-absolute and therefore tied to baseUrl staying '/'. Docusaurus does not
   // rewrite headTags hrefs the way it does for the favicon field.
   headTags: [
-    // Raster first, vector last, and every raster entry carries sizes. Safari ignored SVG favicons
-    // entirely until version 26, so it must find a usable icon without relying on the SVG; the
-    // sizes attributes are what let SVG-capable browsers skip past these to the scalable one.
-    {tagName: 'link', attributes: {rel: 'icon', href: '/favicon.ico', sizes: '32x32'}},
-    {tagName: 'link', attributes: {rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png'}},
-    {tagName: 'link', attributes: {rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png'}},
+    // Order matters, and it is the opposite of what the usual recipe suggests. Safari did not
+    // support SVG favicons until version 26, and rather than skipping a link it cannot decode it
+    // tends to take the last rel=icon in document order — landing on the SVG and drawing nothing.
+    // So the vector goes first and a raster is always last. Chrome and Firefox score the
+    // candidates by type and sizes instead of position, so they still pick the SVG.
     {tagName: 'link', attributes: {rel: 'icon', type: 'image/svg+xml', href: '/img/favicon.svg'}},
+    {tagName: 'link', attributes: {rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png'}},
+    {tagName: 'link', attributes: {rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png'}},
+    {tagName: 'link', attributes: {rel: 'icon', href: '/favicon.ico', sizes: '32x32'}},
     {tagName: 'link', attributes: {rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png'}},
     {tagName: 'link', attributes: {rel: 'manifest', href: '/site.webmanifest'}},
     // Tints the mobile browser chrome to match the navbar in each theme.
