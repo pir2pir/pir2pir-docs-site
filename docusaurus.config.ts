@@ -25,8 +25,8 @@ function editUrl({locale, docPath}: {locale: string; docPath: string}): string {
 }
 
 const config: Config = {
-  title: 'Pir2pir',
-  tagline: 'Документация Pir2pir',
+  title: 'Pir2Pir',
+  tagline: 'Документация Pir2Pir',
 
   url: 'https://docs.pir2pir.ru',
   baseUrl: '/',
@@ -92,7 +92,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Pir2pir',
+      title: 'Pir2Pir',
       items: [
         {
           href: 'https://t.me/pir2pirbot',
@@ -133,7 +133,7 @@ const config: Config = {
         },
       ],
       // The operator must be identifiable from any page carrying legal text.
-      copyright: `ИП Искужин Айгиз · ИНН 024803896842 · ОГРНИП 326028000044859 · <a href="https://pd.rkn.gov.ru/operators-registry/operators-list/?id=2-26-056967" target="_blank" rel="noopener noreferrer">Оператор ПД в реестре РКН № 2-26-056967</a><br/>© ${new Date().getFullYear()} Pir2pir`,
+      copyright: `ИП Искужин Айгиз · ИНН 024803896842 · ОГРНИП 326028000044859 · <a href="https://pd.rkn.gov.ru/operators-registry/operators-list/?id=2-26-056967" target="_blank" rel="noopener noreferrer">Оператор ПД в реестре РКН № 2-26-056967</a><br/>© ${new Date().getFullYear()} Pir2Pir`,
     },
     algolia: hasAlgolia
       ? {
