@@ -1,0 +1,34 @@
+/* Pir2pir docs theme. Kept deliberately small — Infima defaults carry the rest. */
+
+:root {
+  --ifm-color-primary: #2b6cb0;
+  --ifm-color-primary-dark: #275f9c;
+  --ifm-color-primary-darker: #245a94;
+  --ifm-color-primary-darkest: #1e4a7a;
+  --ifm-color-primary-light: #3179c4;
+  --ifm-color-primary-lighter: #3d81c8;
+  --ifm-color-primary-lightest: #5b94d2;
+  --ifm-code-font-size: 95%;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #7aa9dd;
+  --ifm-color-primary-dark: #5f97d5;
+  --ifm-color-primary-darker: #518ed1;
+  --ifm-color-primary-darkest: #3273bb;
+  --ifm-color-primary-light: #95bbe5;
+  --ifm-color-primary-lighter: #a3c4e9;
+  --ifm-color-primary-lightest: #cddef2;
+}
+
+/* Legal pages are long prose; give them a comfortable measure. */
+.markdown table {
+  display: table;
+  width: 100%;
+}
+
+.footer__copyright {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  line-height: 1.6;
+}

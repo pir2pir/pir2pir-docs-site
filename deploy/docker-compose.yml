@@ -1,0 +1,21 @@
+name: pir2pir-docs-site
+
+# Production stack for the Pir2pir docs site. Deployed to /opt/pir2pir-docs-site on the server.
+# The image is pinned to an exact sha by the deploy (DOCS_IMAGE is exported before compose runs).
+# Host nginx terminates TLS for docs.pir2pir.ru and proxies to the published loopback port.
+
+services:
+  pir2pir-docs-site:
+    image: ${DOCS_IMAGE:-ghcr.io/pir2pir/pir2pir-docs-site:latest}
+    container_name: pir2pir-docs-site
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      # Loopback only — nothing reaches this container except the host nginx.
+      - "127.0.0.1:${DOCS_HTTP_PORT:-8081}:8080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

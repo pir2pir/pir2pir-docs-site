@@ -1,0 +1,175 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - production
+
+  # Content-only change: rebuild from the current production commit and redeploy.
+  repository_dispatch:
+    types: [docs-update]
+
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: GHCR tag to deploy, e.g. sha-<full-commit>
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  # A docs-update dispatch means the content changed while the engine did not, so there is no new
+  # engine commit to hang an image off. Rebuild production's sha to pick the new content up.
+  rebuild:
+    name: Rebuild for content change
+    if: github.event_name == 'repository_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: production
+
+      - uses: actions/checkout@v4
+        with:
+          repository: pir2pir/pir2pir-docs
+          ref: production
+          path: external-docs
+          token: ${{ secrets.DOCS_REPO_TOKEN || github.token }}
+
+      - name: Stage content into the build context
+        run: |
+          set -euo pipefail
+          test -f external-docs/docs/index.md \
+            || { echo "::error::content repo has no docs/index.md — refusing to build"; exit 1; }
+          rm -rf docs i18n
+          mv external-docs/docs ./docs
+          [ -d external-docs/i18n ] && mv external-docs/i18n ./i18n || true
+          rm -rf external-docs
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          # Same sha tag the engine build uses, so deploy resolves it the same way either route.
+          tags: ${{ env.IMAGE }}:sha-${{ github.sha }}
+          build-args: |
+            DOCSEARCH_APP_ID=${{ secrets.DOCSEARCH_APP_ID }}
+            DOCSEARCH_API_KEY=${{ secrets.DOCSEARCH_API_KEY }}
+            DOCSEARCH_INDEX_NAME=${{ secrets.DOCSEARCH_INDEX_NAME }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to server
+    needs: [rebuild]
+    # needs.rebuild is skipped for the workflow_run and manual routes; that must not block the deploy.
+    if: >
+      always() &&
+      (needs.rebuild.result == 'success' || needs.rebuild.result == 'skipped') &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        github.event_name == 'repository_dispatch' ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push'
+        )
+      )
+
+    runs-on: ubuntu-latest
+
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Resolve image + encode payloads
+        shell: bash
+        run: |
+          TAG="${{ inputs.image_tag }}"
+
+          if [ -z "$TAG" ]; then
+            if [ "${{ github.event_name }}" = "workflow_run" ]; then
+              # Promotion: develop and production share the commit after a fast-forward merge, so
+              # this resolves to the image CI already built — no rebuild, byte-identical artifact.
+              TAG="sha-${{ github.event.workflow_run.head_sha }}"
+            else
+              TAG="sha-${GITHUB_SHA}"
+            fi
+          fi
+
+          COMPOSE_B64=$(base64 -w0 deploy/docker-compose.yml)
+          ENV_B64=$(printf '%s' "$ENV_PROD" | base64 -w0)
+
+          echo "::add-mask::$ENV_B64"
+
+          {
+            echo "DEPLOY_IMAGE=${IMAGE}:${TAG}"
+            echo "COMPOSE_B64=$COMPOSE_B64"
+            echo "ENV_B64=$ENV_B64"
+          } >> "$GITHUB_ENV"
+
+        env:
+          ENV_PROD: ${{ vars.ENV_PROD }}
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+
+        with:
+          host: ${{ vars.SSH_HOST }}
+          port: ${{ vars.SSH_PORT }}
+          username: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: COMPOSE_B64,ENV_B64,DEPLOY_IMAGE
+
+          script: |
+            set -euo pipefail
+
+            mkdir -p /opt/pir2pir-docs-site
+
+            cd /opt/pir2pir-docs-site
+
+            printf '%s' "$COMPOSE_B64" | base64 -d > docker-compose.yml
+            printf '%s' "$ENV_B64" | base64 -d > .env
+
+            chmod 600 .env
+
+            export DOCS_IMAGE="$DEPLOY_IMAGE"
+
+            # Shared with the other stacks: concurrent pulls race on containerd's shared layers.
+            exec 9>/var/lock/pir2pir-deploy.lock
+            flock -w 600 9
+
+            docker compose pull || {
+              sleep 5
+              docker compose pull
+            }
+
+            docker compose up -d --remove-orphans
+
+            flock -u 9
+
+            docker image prune -f
